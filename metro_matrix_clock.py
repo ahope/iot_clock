@@ -10,6 +10,52 @@ from adafruit_bitmap_font import bitmap_font
 from adafruit_matrixportal.network import Network
 from adafruit_matrixportal.matrix import Matrix
 
+## Spotify Authorization
+url = "https://accounts.spotify.com/api/token"
+headers = {}
+data = {}
+
+# Encode as Base64
+message = f"{clientId}:{clientSecret}"
+messageBytes = message.encode('ascii')
+base64Bytes = base64.b64encode(messageBytes)
+base64Message = base64Bytes.decode('ascii')
+
+
+headers['Authorization'] = f"Basic {base64Message}"
+data['grant_type'] = "client_credentials"
+
+r = requests.post(url, headers=headers, data=data)
+token = r.json()['access_token']
+
+# Step 2 - Use Access Token to call playlist endpoint
+
+playlistId = "myPlaylistId"
+playlistUrl = f"https://api.spotify.com/v1/playlists/{playlistId}"
+headers = {
+    "Authorization": "Bearer " + token
+}
+
+res = requests.get(url=playlistUrl, headers=headers)
+
+print(json.dumps(res.json(), indent=2))
+
+# bear = secrets['bearer_token']
+
+# DATA_SOURCE = ('https://api.twitter.com/2/tweets/search/recent?query=#partyparrot to:blitzcitydiy')
+# DATA_LOCATION = ["meta", "newest_id"]
+
+# matrixportal = MatrixPortal(
+#     url=DATA_SOURCE,
+#     json_path=DATA_LOCATION,
+#     status_neopixel=board.NEOPIXEL
+# )
+
+
+
+
+#### =============  CLOCK =========
+
 BLINK = True
 DEBUG = False
 
