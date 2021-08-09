@@ -110,6 +110,9 @@ def message_received(client, topic, message):
     # update_scores()
     # customize_team_names()
 
+RED_COLOR = 0xAA0000
+TURQUOISE_COLOR = 0x00FFAA
+
 
 # group = displayio.Group()  # Create a Group
 # bitmap = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
@@ -129,7 +132,7 @@ def update_time(*, hours=None, minutes=None, show_colon=False):
     # struct_time(tm_year=2021, tm_mon=8, tm_mday=8, tm_hour=15, tm_min=20, tm_sec=16, tm_wday=6, tm_yday=220, tm_isdst=-1)
     # print(now)
 
-    matrixportal.set_text('{0}:{1}'.format(now[3], now[4]), 
+    matrixportal.set_text('{0}:{1}'.format(now[3]%12, now[4]), 
         1)
 
     # if hours is None:
@@ -222,10 +225,20 @@ def subscribe():
         mqtt.connect()
     mqtt.on_message = message_received
 
+def color_update():
+    print("Changing the color")
+    matrixportal.set_text_color(TURQUOISE_COLOR, 0)
+    pass
+
 
 subscribe()
 mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.spotify") ##"ahslaughter/feeds/spotify")
 mqtt.on_message = message_received
+
+mqtt.add_topic_callback(
+    secrets["aio_username"] + "/feeds/matrix-display-feeds.color", color_update
+)
+
 # customize_team_names()
 # update_scores()
 
