@@ -31,15 +31,17 @@ mqtt = MQTT.MQTT(
 
 
 DISPLAY_CLOCK = 1
+DISPLAY_SPOTIFY = 2
 
 
-CURRENT_DISPLAY = DISPLAY_CLOCK
+CURRENT_DISPLAY = DISPLAY_SPOTIFY## DISPLAY_CLOCK
 
 RED_COLOR = 0xAA0000
 TURQUOISE_COLOR = 0x00FFAA
 PINK_COLOR = 0xFF0088
 
 text_colors = [TURQUOISE_COLOR, PINK_COLOR, RED_COLOR]
+current_text_color = 0
 
 MQTT.set_socket(socket, network._wifi.esp)
 
@@ -49,52 +51,21 @@ last_data = {}
 group = None# = displayio.Group()  # Create a Group
 bitmap = None # = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
 color = None #= displayio.Palette(4)  # Create a color palette
-# color[0] = 0x000000  # black background
-# color[1] = 0xFF0000  # red
-# color[2] = 0xCC4000  # amber
-# color[3] = 0x85FF00  # greenish
 
 # Create a TileGrid using the Bitmap and Palette
 tile_grid = None #= displayio.TileGrid(bitmap, pixel_shader=color)
-# group.append(tile_grid)  # Add the TileGrid to the Group
-# display.show(group)
 
-## Stuff for the Clock display 
-# color = displayio.Palette(4)  # Create a color palette
-# color[0] = 0x000000  # black background
-# color[1] = 0xFF0000  # red
-# color[2] = 0xCC4000  # amber
-# color[3] = 0x85FF00  # greenish
 font = bitmap_font.load_font("/IBMPlexMono-Medium-24_jep.bdf")
 clock_label = Label(font)
+artist_label = None
+title_label = None
 
-
+small_font = bitmap_font.load_font("/fonts/Arial-12.bdf")
+medium_font = bitmap_font.load_font("/fonts/Arial-14.bdf")
 
 BLINK = True
 
 
-# ## Stuff for the Weather display 
-# UNITS = "imperial"
-# # Use cityname, country code where countrycode is ISO3166 format.
-# # E.g. "New York, US" or "London, GB"
-# LOCATION = "Seattle, US"
-# print("Getting weather for {}".format(LOCATION))
-# # Set up from where we'll be fetching data
-# DATA_SOURCE = (
-#     "http://api.openweathermap.org/data/2.5/weather?q=" + LOCATION + "&units=" + UNITS
-# )
-# DATA_SOURCE += "&appid=" + secrets["openweather_token"]
-# # You'll need to get a token from openweather.org, looks like 'b6907d289e10d714a6e88b30761fae22'
-# # it goes in your secrets.py file on a line such as:
-# # 'openweather_token' : 'your_big_humongous_gigantor_token',
-# DATA_LOCATION = []
-# SCROLL_HOLD_TIME = 0  # set this to hold each line before finishing scroll
-# if UNITS == "imperial" or UNITS == "metric":
-#     gfx = openweather_graphics.OpenWeather_Graphics(
-#         matrixportal.graphics.display, am_pm=True, units=UNITS
-#     )
-
-CLOCK_DISPLAY_TEXT_INDEX = 0
 
 
 def set_display_clock(): 
@@ -130,26 +101,70 @@ def set_display_clock():
 
     update_time()
     group.append(clock_label)
-    
+    CURRENT_DISPLAY = DISPLAY_CLOCK
 
-# def set_display_weather():
-#     pass
 
 def set_display_spotify():
-    matrixportal.add_text(text_wrap=10, 
-                    text_maxlen=25, 
-                    text_position=(2, 15),
-                    scrolling=False)
-    matrixportal.set_text("waiting for update", 1)
+    global title_label
+    global artist_label
+    group = displayio.Group()
+    artist_label = Label(small_font)
+    title_label = Label(medium_font)
+
+    artist_label.text = "Artist"
+    title_label.text = "Song Title Goes Here"
+
+    bbx, bby, bbwidth, bbh = title_label.bounding_box
+    # Center the label
+    print(title_label.bounding_box)
+    title_label.x = 1 #3round(display.width / 2 - bbwidth / 2)
+    title_label.y = -1*bby ##display.height // 2
+
+    # bbx, bby, bbwidth, bbh = artist_label.bounding_box
+    artist_label.x = 1
+    artist_label.y = title_label.y + bbh + 1 ##32 - bbh
+
+    group.append(title_label)
+    group.append(artist_label)
+
+    display.show(group)
+    CURRENT_DISPLAY = DISPLAY_SPOTIFY
+
+
+    # matrixportal.add_text(text_wrap=10, 
+    #                 text_maxlen=25, 
+    #                 text_position=(2, 15),
+    #                 scrolling=False)
+    # matrixportal.set_text("waiting for update", 0)
 
     pass
 
+def spotify_update(message):
+    global title_label
+    global artist_label
+    index = message.find("|")
+    if (index >= 0):
+        title_text = message[0:index]
+        artist_text = message[index + 1:]
+        title_label.text = title_text
+        artist_label.text = artist_text
+        title_label.color = text_colors[current_text_color]
 
+def change_display(message):
+    if (message == "spotify"):
+        set_display_spotify()
+    if (message == "clock"):
+        set_display_clock()
+    pass
 
 def message_received(client, topic, message):
     print("Received {} for {}".format(message, topic))
     if (topic == "ahslaughter/feeds/matrix-display-feeds.color"): 
         color_update(message)
+    if (topic == "ahslaughter/feeds/matrix-display-feeds.spotify"):
+        spotify_update(message)
+    if (topic == "ahslaughter/feeds/matrix-display-feeds.which-display"):
+        change_display(message)
     else: 
         matrixportal.set_text(message, 0)
         matrixportal.scroll_text()
@@ -162,6 +177,9 @@ localtime_refresh = None
 def update_time(*, hours=None, minutes=None, show_colon=False):
     global clock_label
     global display
+    global text_colors
+    global current_text_color
+
     print("updating the time")
     now = time.localtime()  # Get the time values we need
     # print(now)
@@ -190,6 +208,10 @@ def update_time(*, hours=None, minutes=None, show_colon=False):
     clock_label.text = "{hours}{colon}{minutes:02d}".format(
         hours=hours, minutes=minutes, colon=colon
     )
+
+    clock_label.color = text_colors[current_text_color]
+
+
     bbx, bby, bbwidth, bbh = clock_label.bounding_box
     # Center the label
     clock_label.x = round(display.width / 2 - bbwidth / 2)
@@ -202,6 +224,10 @@ def update_time(*, hours=None, minutes=None, show_colon=False):
     print("Label bounding box: {},{},{},{}".format(bbx, bby, bbwidth, bbh))
     print("Label x: {} y: {}".format(clock_label.x, clock_label.y))
     print("label: {}".format(clock_label.text))
+
+
+# def update_spotify():
+
 
 
 def get_last_data(feed):
@@ -217,14 +243,17 @@ def subscribe():
     mqtt.on_message = message_received
 
 def color_update(which):
+    global current_text_color
     print("Changing the color")
-    matrixportal.set_text_color(text_colors[int(which)], 0)
-    pass
+    current_text_color = int(which)
+    # matrixportal.set_text_color(text_colors[int(which)], 0)
+
 
 
 subscribe()
 mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.spotify") ##"ahslaughter/feeds/spotify")
 mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.color") ##"ahslaughter/feeds/spotify")
+mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.which-display")
 mqtt.on_message = message_received
 
 last_check = None
@@ -246,21 +275,6 @@ def update_clock():
     update_time()
 
 
-# def update_weather():
-#     global weather_refresh
-#     if (not weather_refresh) or (time.monotonic() - weather_refresh) > 600:
-#         try:
-#             value = network.fetch_data(DATA_SOURCE, json_path=(DATA_LOCATION,))
-#             print("Response is", value[0])
-#             gfx.display_weather(value[0])
-#             weather_refresh = time.monotonic()
-#         except RuntimeError as e:
-#             print("Some error occured, retrying! -", e)
-#             # continue
-
-#     gfx.scroll_next_label()
-#     # Pause between labels
-#     time.sleep(SCROLL_HOLD_TIME)
 
 def update_mqtt_messages(): 
     try:
@@ -270,13 +284,15 @@ def update_mqtt_messages():
         network.connect()
         mqtt.reconnect()
 
-set_display_clock()
-
+# set_display_clock()
+set_display_spotify()
 
 while True:
     if (CURRENT_DISPLAY == DISPLAY_CLOCK):
         update_clock()
-        # update_mqtt_messages()    
+        
+    update_mqtt_messages()    
+
     
     # if (CURRENT_DISPLAY == DISPLAY_WEATHER):
     #     update_weather()
