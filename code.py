@@ -46,18 +46,18 @@ MQTT.set_socket(socket, network._wifi.esp)
 
 last_data = {}
 
-group = displayio.Group()  # Create a Group
-bitmap = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
-color = displayio.Palette(4)  # Create a color palette
-color[0] = 0x000000  # black background
-color[1] = 0xFF0000  # red
-color[2] = 0xCC4000  # amber
-color[3] = 0x85FF00  # greenish
+group = None# = displayio.Group()  # Create a Group
+bitmap = None # = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
+color = None #= displayio.Palette(4)  # Create a color palette
+# color[0] = 0x000000  # black background
+# color[1] = 0xFF0000  # red
+# color[2] = 0xCC4000  # amber
+# color[3] = 0x85FF00  # greenish
 
 # Create a TileGrid using the Bitmap and Palette
-tile_grid = displayio.TileGrid(bitmap, pixel_shader=color)
-group.append(tile_grid)  # Add the TileGrid to the Group
-display.show(group)
+tile_grid = None #= displayio.TileGrid(bitmap, pixel_shader=color)
+# group.append(tile_grid)  # Add the TileGrid to the Group
+# display.show(group)
 
 ## Stuff for the Clock display 
 # color = displayio.Palette(4)  # Create a color palette
@@ -100,6 +100,10 @@ CLOCK_DISPLAY_TEXT_INDEX = 0
 def set_display_clock(): 
     # global matrixportal
     global clock_label
+    global group
+    global bitmap
+    global color
+    global display
     # matrixportal.add_text(text_color=0xFF8800,
     #                       text_position=(30,5))
     # now = time.localtime() 
@@ -108,11 +112,11 @@ def set_display_clock():
     # --- Drawing setup ---
     group = displayio.Group()  # Create a Group
     bitmap = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
-    # color = displayio.Palette(4)  # Create a color palette
-    # color[0] = 0x000000  # black background
-    # color[1] = 0xFF0000  # red
-    # color[2] = 0xCC4000  # amber
-    # color[3] = 0x85FF00  # greenish
+    color = displayio.Palette(4)  # Create a color palette
+    color[0] = 0x000000  # black background
+    color[1] = 0xFF0000  # red
+    color[2] = 0xCC4000  # amber
+    color[3] = 0x85FF00  # greenish
 
     # Create a TileGrid using the Bitmap and Palette
     tile_grid = displayio.TileGrid(bitmap, pixel_shader=color)
@@ -124,6 +128,9 @@ def set_display_clock():
     clock_label.x = 3
     clock_label.y = 3   
 
+    update_time()
+    group.append(clock_label)
+    
 
 # def set_display_weather():
 #     pass
@@ -263,9 +270,8 @@ def update_mqtt_messages():
         network.connect()
         mqtt.reconnect()
 
-# set_display_clock()
-update_time()
-group.append(clock_label)
+set_display_clock()
+
 
 while True:
     if (CURRENT_DISPLAY == DISPLAY_CLOCK):
