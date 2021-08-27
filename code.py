@@ -13,7 +13,7 @@ from adafruit_bitmap_font import bitmap_font
 import adafruit_minimqtt.adafruit_minimqtt as MQTT
 import adafruit_esp32spi.adafruit_esp32spi_socket as socket
 from secrets import secrets
-import openweather_graphics 
+# import openweather_graphics 
 
 # --- Display setup ---
 matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=False)
@@ -28,6 +28,11 @@ mqtt = MQTT.MQTT(
     port=1883,
 )
 
+
+DISPLAY_CLOCK = 1
+
+
+CURRENT_DISPLAY = DISPLAY_CLOCK
 
 RED_COLOR = 0xAA0000
 TURQUOISE_COLOR = 0x00FFAA
@@ -52,45 +57,47 @@ clock_label = Label(font)
 BLINK = True
 
 
-## Stuff for the Weather display 
-UNITS = "imperial"
-# Use cityname, country code where countrycode is ISO3166 format.
-# E.g. "New York, US" or "London, GB"
-LOCATION = "Seattle, US"
-print("Getting weather for {}".format(LOCATION))
-# Set up from where we'll be fetching data
-DATA_SOURCE = (
-    "http://api.openweathermap.org/data/2.5/weather?q=" + LOCATION + "&units=" + UNITS
-)
-DATA_SOURCE += "&appid=" + secrets["openweather_token"]
-# You'll need to get a token from openweather.org, looks like 'b6907d289e10d714a6e88b30761fae22'
-# it goes in your secrets.py file on a line such as:
-# 'openweather_token' : 'your_big_humongous_gigantor_token',
-DATA_LOCATION = []
-SCROLL_HOLD_TIME = 0  # set this to hold each line before finishing scroll
-if UNITS == "imperial" or UNITS == "metric":
-    gfx = openweather_graphics.OpenWeather_Graphics(
-        matrixportal.graphics.display, am_pm=True, units=UNITS
-    )
+# ## Stuff for the Weather display 
+# UNITS = "imperial"
+# # Use cityname, country code where countrycode is ISO3166 format.
+# # E.g. "New York, US" or "London, GB"
+# LOCATION = "Seattle, US"
+# print("Getting weather for {}".format(LOCATION))
+# # Set up from where we'll be fetching data
+# DATA_SOURCE = (
+#     "http://api.openweathermap.org/data/2.5/weather?q=" + LOCATION + "&units=" + UNITS
+# )
+# DATA_SOURCE += "&appid=" + secrets["openweather_token"]
+# # You'll need to get a token from openweather.org, looks like 'b6907d289e10d714a6e88b30761fae22'
+# # it goes in your secrets.py file on a line such as:
+# # 'openweather_token' : 'your_big_humongous_gigantor_token',
+# DATA_LOCATION = []
+# SCROLL_HOLD_TIME = 0  # set this to hold each line before finishing scroll
+# if UNITS == "imperial" or UNITS == "metric":
+#     gfx = openweather_graphics.OpenWeather_Graphics(
+#         matrixportal.graphics.display, am_pm=True, units=UNITS
+#     )
+
+CLOCK_DISPLAY_TEXT_INDEX = 0
 
 def set_display_clock(): 
-    matrixportal.add_text(text_wrap=10, 
-                        text_maxlen=25, 
-                        text_position=(2, 15),
-                        scrolling=False)
-
     matrixportal.add_text(text_color=0xFF8800,
                           text_position=(30,5))
     now = time.localtime() 
-    matrixportal.set_text(now[3], 1)
+    matrixportal.set_text(now[3], CLOCK_DISPLAY_TEXT_INDEX)
 
-    matrixportal.set_text("waiting for update", 0)
+    
     pass 
 
-def set_display_weather():
-    pass
+# def set_display_weather():
+#     pass
 
 def set_display_spotify():
+    matrixportal.add_text(text_wrap=10, 
+                    text_maxlen=25, 
+                    text_position=(2, 15),
+                    scrolling=False)
+    matrixportal.set_text("waiting for update", 1)
     pass
 
 
@@ -105,19 +112,19 @@ def message_received(client, topic, message):
 
 
 localtime_refresh = None
-weather_refresh = None
+# weather_refresh = None
 
 
 def update_time(*, hours=None, minutes=None, show_colon=False):
     now = time.localtime()  # Get the time values we need
+    # print(now)
     matrixportal.set_text('{0}:{1}'.format(now[3]%12, now[4]), 
-        1)
+        CLOCK_DISPLAY_TEXT_INDEX)
 
 
 def get_last_data(feed):
     feed_url = feeds.get(feed)
     return last_data.get(feed_url)
-
 
 
 def subscribe():
@@ -138,18 +145,12 @@ mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.spotify") ##"ahslaughter/
 mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.color") ##"ahslaughter/feeds/spotify")
 mqtt.on_message = message_received
 
-# mqtt.add_topic_callback("ahslaughter/feeds/matrix-display-feeds.color", color_update)
-
-# customize_team_names()
-# update_scores()
-
 last_check = None
 localtime_refresh = None
-weather_refresh = None
 
-while True:
-    # print("looping")
-    # Set the red score text
+
+def update_clock():
+    global last_check
     if last_check is None or time.monotonic() > last_check + 3600:
         try:
             update_time(
@@ -162,26 +163,39 @@ while True:
 
     update_time()
 
-    if (not weather_refresh) or (time.monotonic() - weather_refresh) > 600:
-        try:
-            value = network.fetch_data(DATA_SOURCE, json_path=(DATA_LOCATION,))
-            print("Response is", value)
-            gfx.display_weather(value)
-            weather_refresh = time.monotonic()
-        except RuntimeError as e:
-            print("Some error occured, retrying! -", e)
-            continue
 
-    gfx.scroll_next_label()
-    # Pause between labels
-    time.sleep(SCROLL_HOLD_TIME)
+# def update_weather():
+#     global weather_refresh
+#     if (not weather_refresh) or (time.monotonic() - weather_refresh) > 600:
+#         try:
+#             value = network.fetch_data(DATA_SOURCE, json_path=(DATA_LOCATION,))
+#             print("Response is", value[0])
+#             gfx.display_weather(value[0])
+#             weather_refresh = time.monotonic()
+#         except RuntimeError as e:
+#             print("Some error occured, retrying! -", e)
+#             # continue
 
+#     gfx.scroll_next_label()
+#     # Pause between labels
+#     time.sleep(SCROLL_HOLD_TIME)
 
+def update_mqtt_messages(): 
     try:
         mqtt.is_connected()
         mqtt.loop()
     except (MQTT.MMQTTException, RuntimeError):
         network.connect()
         mqtt.reconnect()
+
+set_display_clock()
+
+while True:
+    if (CURRENT_DISPLAY == DISPLAY_CLOCK):
+        update_clock()
+        # update_mqtt_messages()
+    
+    # if (CURRENT_DISPLAY == DISPLAY_WEATHER):
+    #     update_weather()
 
     time.sleep(3)
