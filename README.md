@@ -8,6 +8,13 @@ It's easy to get projects up and running with the code and instructions provided
 My goal with this project was to give me a field to explore and learn. I tried pushing the project in a number of ways, just to see what could be done, what was easy, what was hard. 
 
 
+## Things to do
+
+* Scroll the Spotify Display
+* Clean up the code
+* Add error checking for values from MQTT
+* Publish the Alexa skill for voice control
+
 
 
 ### First pass
@@ -35,6 +42,20 @@ Thus, I got the weather part of the app running too.
 #### Challenge 2: Memory!!! 
 
 Finally! I shoved enough on the board and was sloppy enough with the planning that we ran out of memory! I knew this would happen, but wasn't quite sure when. So, now that we've got all the pieces, time to organize it so we can swap things out rather than keep in memory all the time. 
+
+### Finalizing
+
+I'm having tons of ideas for now, and just want something working with loose ends tied up. So I'm not going to debug the complex weather thing, I'm just going to make what I have work by cleaning it up. 
+
+That means I end up with: 
+
+* 2 Displays: One for Spotify, one for the clock
+* 3 data sources: 
+    - Display: which thing to display
+    - color: which color to show things in
+    - spotify: the messages coming from MQTT/IFTTT
+
+
 
 
 # Debugging
