@@ -31,9 +31,10 @@ mqtt = MQTT.MQTT(
 
 
 DISPLAY_CLOCK = 1
+DISPLAY_SPOTIFY = 2
 
 
-CURRENT_DISPLAY = DISPLAY_CLOCK
+CURRENT_DISPLAY = DISPLAY_SPOTIFY## DISPLAY_CLOCK
 
 RED_COLOR = 0xAA0000
 TURQUOISE_COLOR = 0x00FFAA
@@ -56,8 +57,6 @@ tile_grid = None #= displayio.TileGrid(bitmap, pixel_shader=color)
 
 font = bitmap_font.load_font("/IBMPlexMono-Medium-24_jep.bdf")
 clock_label = Label(font)
-
-
 
 BLINK = True
 
@@ -97,17 +96,14 @@ def set_display_clock():
 
     update_time()
     group.append(clock_label)
-    
 
-# def set_display_weather():
-#     pass
 
 def set_display_spotify():
     matrixportal.add_text(text_wrap=10, 
                     text_maxlen=25, 
                     text_position=(2, 15),
                     scrolling=False)
-    matrixportal.set_text("waiting for update", 1)
+    matrixportal.set_text("waiting for update", 0)
 
     pass
 
@@ -191,9 +187,11 @@ def subscribe():
     mqtt.on_message = message_received
 
 def color_update(which):
+    global current_text_color
     print("Changing the color")
-    matrixportal.set_text_color(text_colors[int(which)], 0)
-    pass
+    current_text_color = int(which)
+    # matrixportal.set_text_color(text_colors[int(which)], 0)
+
 
 
 subscribe()
@@ -229,13 +227,15 @@ def update_mqtt_messages():
         network.connect()
         mqtt.reconnect()
 
-set_display_clock()
-
+# set_display_clock()
+set_display_spotify()
 
 while True:
     if (CURRENT_DISPLAY == DISPLAY_CLOCK):
         update_clock()
-        update_mqtt_messages()    
+        
+    update_mqtt_messages()    
+
     
     # if (CURRENT_DISPLAY == DISPLAY_WEATHER):
     #     update_weather()
