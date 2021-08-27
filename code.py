@@ -20,6 +20,7 @@ matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=False)
 network = matrixportal.network
 network.connect()
 
+display = matrixportal.graphics.display
 
 mqtt = MQTT.MQTT(
     broker=secrets.get("mqtt_broker"),
@@ -45,14 +46,29 @@ MQTT.set_socket(socket, network._wifi.esp)
 
 last_data = {}
 
-## Stuff for the Clock display 
+group = displayio.Group()  # Create a Group
+bitmap = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
 color = displayio.Palette(4)  # Create a color palette
 color[0] = 0x000000  # black background
 color[1] = 0xFF0000  # red
 color[2] = 0xCC4000  # amber
 color[3] = 0x85FF00  # greenish
+
+# Create a TileGrid using the Bitmap and Palette
+tile_grid = displayio.TileGrid(bitmap, pixel_shader=color)
+group.append(tile_grid)  # Add the TileGrid to the Group
+display.show(group)
+
+## Stuff for the Clock display 
+# color = displayio.Palette(4)  # Create a color palette
+# color[0] = 0x000000  # black background
+# color[1] = 0xFF0000  # red
+# color[2] = 0xCC4000  # amber
+# color[3] = 0x85FF00  # greenish
 font = bitmap_font.load_font("/IBMPlexMono-Medium-24_jep.bdf")
 clock_label = Label(font)
+
+
 
 BLINK = True
 
@@ -80,14 +96,34 @@ BLINK = True
 
 CLOCK_DISPLAY_TEXT_INDEX = 0
 
-def set_display_clock(): 
-    matrixportal.add_text(text_color=0xFF8800,
-                          text_position=(30,5))
-    now = time.localtime() 
-    matrixportal.set_text(now[3], CLOCK_DISPLAY_TEXT_INDEX)
 
-    
-    pass 
+def set_display_clock(): 
+    # global matrixportal
+    global clock_label
+    # matrixportal.add_text(text_color=0xFF8800,
+    #                       text_position=(30,5))
+    # now = time.localtime() 
+    # matrixportal.set_text(now[3], CLOCK_DISPLAY_TEXT_INDEX)
+
+    # --- Drawing setup ---
+    group = displayio.Group()  # Create a Group
+    bitmap = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
+    # color = displayio.Palette(4)  # Create a color palette
+    # color[0] = 0x000000  # black background
+    # color[1] = 0xFF0000  # red
+    # color[2] = 0xCC4000  # amber
+    # color[3] = 0x85FF00  # greenish
+
+    # Create a TileGrid using the Bitmap and Palette
+    tile_grid = displayio.TileGrid(bitmap, pixel_shader=color)
+    group.append(tile_grid)  # Add the TileGrid to the Group
+    display.show(group)
+
+    clock_label = Label(font)
+    clock_label.text = "Yo!"
+    clock_label.x = 3
+    clock_label.y = 3   
+
 
 # def set_display_weather():
 #     pass
@@ -98,6 +134,7 @@ def set_display_spotify():
                     text_position=(2, 15),
                     scrolling=False)
     matrixportal.set_text("waiting for update", 1)
+
     pass
 
 
@@ -116,10 +153,48 @@ localtime_refresh = None
 
 
 def update_time(*, hours=None, minutes=None, show_colon=False):
+    global clock_label
+    global display
+    print("updating the time")
     now = time.localtime()  # Get the time values we need
     # print(now)
-    matrixportal.set_text('{0}:{1}'.format(now[3]%12, now[4]), 
-        CLOCK_DISPLAY_TEXT_INDEX)
+    # matrixportal.set_text('{0}:{1}'.format(now[3]%12, now[4]), 
+    #     CLOCK_DISPLAY_TEXT_INDEX)
+
+    if hours is None:
+        hours = now[3]
+    if hours >= 18 or hours < 6:  # evening hours to morning
+        clock_label.color = color[1]
+    else:
+        clock_label.color = color[3]  # daylight hours
+    if hours > 12:  # Handle times later than 12:59
+        hours -= 12
+    elif not hours:  # Handle times between 0:00 and 0:59
+        hours = 12
+
+    if minutes is None:
+        minutes = now[4]
+
+    if BLINK:
+        colon = ":" if show_colon or now[5] % 2 else " "
+    else:
+        colon = ":"
+
+    clock_label.text = "{hours}{colon}{minutes:02d}".format(
+        hours=hours, minutes=minutes, colon=colon
+    )
+    bbx, bby, bbwidth, bbh = clock_label.bounding_box
+    # Center the label
+    clock_label.x = round(display.width / 2 - bbwidth / 2)
+    clock_label.y = display.height // 2
+
+    # print(clock_label.bounding_box)
+    # print(display.width)
+
+    # if DEBUG:
+    print("Label bounding box: {},{},{},{}".format(bbx, bby, bbwidth, bbh))
+    print("Label x: {} y: {}".format(clock_label.x, clock_label.y))
+    print("label: {}".format(clock_label.text))
 
 
 def get_last_data(feed):
@@ -188,12 +263,14 @@ def update_mqtt_messages():
         network.connect()
         mqtt.reconnect()
 
-set_display_clock()
+# set_display_clock()
+update_time()
+group.append(clock_label)
 
 while True:
     if (CURRENT_DISPLAY == DISPLAY_CLOCK):
         update_clock()
-        # update_mqtt_messages()
+        # update_mqtt_messages()    
     
     # if (CURRENT_DISPLAY == DISPLAY_WEATHER):
     #     update_weather()
