@@ -1,6 +1,4 @@
-# Scoreboard matrix display
-# uses AdafruitIO to set scores and team names for a scoreboard
-# Perfect for cornhole, ping pong, and other games
+
 
 import time
 import board
@@ -71,12 +69,12 @@ last_data = {}
 
 
 ## --- Clock data and info ---
-group = None# = displayio.Group()  # Create a Group
-bitmap = None # = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
-color = None #= displayio.Palette(4)  # Create a color palette
+group = None
+bitmap = None
+color = None
 
 # Create a TileGrid using the Bitmap and Palette
-tile_grid = None #= displayio.TileGrid(bitmap, pixel_shader=color)
+tile_grid = None 
 
 clock_label = Label(font)
 artist_label = None
@@ -88,8 +86,6 @@ last_time_check = None
 
 TIME_STRING_FORMAT = "{hours}{colon}{minutes:02d}"
 current_time_string = None
-
-
 
 
 def set_display_clock(): 
@@ -104,11 +100,6 @@ def set_display_clock():
     # --- Drawing setup ---
     group = displayio.Group()  # Create a Group
     bitmap = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
-    color = displayio.Palette(4)  # Create a color palette
-    color[0] = 0x000000  # black background
-    color[1] = 0xFF0000  # red
-    color[2] = 0xCC4000  # amber
-    color[3] = 0x85FF00  # greenish
 
     # Create a TileGrid using the Bitmap and Palette
     tile_grid = displayio.TileGrid(bitmap, pixel_shader=color)
@@ -139,12 +130,11 @@ def set_display_spotify():
     bbx, bby, bbwidth, bbh = title_label.bounding_box
     # Center the label
     print(title_label.bounding_box)
-    title_label.x = 1 #3round(display.width / 2 - bbwidth / 2)
-    title_label.y = -1*bby ##display.height // 2
+    title_label.x = 1 
+    title_label.y = -1*bby 
 
-    # bbx, bby, bbwidth, bbh = artist_label.bounding_box
     artist_label.x = 1
-    artist_label.y = title_label.y + bbh + 1 ##32 - bbh
+    artist_label.y = title_label.y + bbh + 1 
 
     group.append(title_label)
     group.append(artist_label)
@@ -165,6 +155,7 @@ def spotify_update(message):
     global title_label
     global artist_label
     print("got a spotify update!")
+    last_data.push(message)
     index = message.find("|")
     if (index >= 0):
         title_text = message[0:index]
@@ -182,7 +173,6 @@ def scroll_spotify():
     if title_label.width > display.width: 
         # Run a loop until the label is offscreen again and leave function
         for _ in range(title_label.width):
-            # self._scrolling_group.x = self._scrolling_group.x - 1
             title_label.x = title_label.x - 1
             time.sleep(scroll_delay)
         title_label.x = display.width
@@ -193,7 +183,6 @@ def scroll_spotify():
     if artist_label.width > display.width:
         # Run a loop until the label is offscreen again and leave function
         for _ in range(artist_label.width):
-            # self._scrolling_group.x = self._scrolling_group.x - 1
             artist_label.x = artist_label.x - 1
             time.sleep(scroll_delay)
         artist_label.x = display.width
@@ -279,16 +268,7 @@ def color_update(which):
         current_text_color = new_color_index
 
 
-
 def update_clock():
-    # global last_time_check
-    # if last_time_check is None or time.monotonic() > last_time_check + 3600:
-    #     try:
-    #         update_time(
-    #             show_colon=True
-    #         )  # Make sure a colon is displayed while updating
-    #         network.get_local_time()  # Synchronize Board's clock to Internet
-    #         last_time_check = time.monotonic()
     clock_label.text = current_time_string
 
     clock_label.color = text_colors[current_text_color]
@@ -296,8 +276,6 @@ def update_clock():
     # Center the label
     clock_label.x = round(display.width / 2 - bbwidth / 2)
     clock_label.y = display.height // 2
-        # except RuntimeError as e:
-        #     print("Some error occured, retrying! -", e)
 
 
 def update_mqtt_messages(): 
@@ -313,13 +291,10 @@ subscribe()
 set_display_spotify()
 
 while True:
-    # print(last_time_check)
-    # print(time.monotonic())
     if last_time_check is None or time.monotonic() > last_time_check + 3600:
         network.get_local_time()  # Synchronize Board's clock to Internet
         last_time_check = time.monotonic()
     update_time(show_colon=True)
-
 
     if (current_display == DISPLAY_CLOCK):
         update_clock()
