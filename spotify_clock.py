@@ -20,6 +20,8 @@ matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=False)
 network = matrixportal.network
 network.connect()
 
+network.get_local_time() 
+
 display = matrixportal.graphics.display
 
 mqtt = MQTT.MQTT(
@@ -35,6 +37,8 @@ DISPLAY_SPOTIFY = 2
 
 
 CURRENT_DISPLAY = DISPLAY_SPOTIFY## DISPLAY_CLOCK
+
+scroll_delay = 0.03
 
 RED_COLOR = 0xAA0000
 TURQUOISE_COLOR = 0x00FFAA
@@ -111,8 +115,10 @@ def set_display_spotify():
     artist_label = Label(small_font)
     title_label = Label(medium_font)
 
-    artist_label.text = "Artist"
-    title_label.text = "Song Title Goes Here"
+    now = time.localtime()  # Get the time values we need
+    print(now)
+    artist_label.text = '{0}:{1}'.format(now[3], now[4])
+    title_label.text = "Waiting for update..."
 
     bbx, bby, bbwidth, bbh = title_label.bounding_box
     # Center the label
@@ -137,7 +143,6 @@ def set_display_spotify():
     #                 scrolling=False)
     # matrixportal.set_text("waiting for update", 0)
 
-    pass
 
 def spotify_update(message):
     global title_label
@@ -149,6 +154,29 @@ def spotify_update(message):
         title_label.text = title_text
         artist_label.text = artist_text
         title_label.color = text_colors[current_text_color]
+
+def scroll_spotify():
+    # Run a loop until the label is offscreen again and leave function
+    for _ in range(title_label.width):
+        # self._scrolling_group.x = self._scrolling_group.x - 1
+        title_label.x = title_label.x - 1
+        time.sleep(scroll_delay)
+    title_label.x = display.width
+    for _ in range(display.width):
+        title_label.x = title_label.x - 1
+        time.sleep(scroll_delay)
+
+    # Run a loop until the label is offscreen again and leave function
+    for _ in range(artist_label.width):
+        # self._scrolling_group.x = self._scrolling_group.x - 1
+        artist_label.x = artist_label.x - 1
+        time.sleep(scroll_delay)
+    artist_label.x = display.width
+    for _ in range(display.width):
+        artist_label.x = artist_label.x - 1
+        time.sleep(scroll_delay)
+
+
 
 def change_display(message):
     if (message == "spotify"):
@@ -291,6 +319,9 @@ while True:
     if (CURRENT_DISPLAY == DISPLAY_CLOCK):
         update_clock()
         
+    if (CURRENT_DISPLAY == DISPLAY_SPOTIFY):
+        scroll_spotify()
+
     update_mqtt_messages()    
 
     
