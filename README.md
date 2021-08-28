@@ -12,11 +12,15 @@ My goal with this project was to give me a field to explore and learn. I tried p
 
 - [x] Scroll the Spotify Display
 - [ ] Clean up the code
+- [ ] Modify MQTT to keep a list of messages, showing one at a time. 
 - [ ] Add error checking for values from MQTT
 - [ ] Publish the Alexa skill for voice control
     - [ ] Add capabilities to Alexa for: 
         - [ ]  Changing the display
-    - [ ] Make sure values match between Alexa and the display
+    - [ ] Make sure values match between Alexa and the 
+- [ ] The IFTTT applet for Spotify is polling, which means it updates ~once per hour. That's all well and fine, but it's not quite timely, and when it does update, it updates a bunch of songs all at once. Investigate other options. 
+    - [ ] Zapier
+    - [ ] Custom-built Spotify updater (Lambda?)
 
 
 
