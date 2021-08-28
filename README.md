@@ -10,7 +10,7 @@ My goal with this project was to give me a field to explore and learn. I tried p
 
 ## Things to do
 
-- [*] Scroll the Spotify Display
+- [x] Scroll the Spotify Display
 - [ ] Clean up the code
 - [ ] Add error checking for values from MQTT
 - [ ] Publish the Alexa skill for voice control
