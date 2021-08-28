@@ -13,17 +13,17 @@ from adafruit_bitmap_font import bitmap_font
 import adafruit_minimqtt.adafruit_minimqtt as MQTT
 import adafruit_esp32spi.adafruit_esp32spi_socket as socket
 from secrets import secrets
-# import openweather_graphics 
 
 # --- Display setup ---
 matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=False)
-network = matrixportal.network
-network.connect()
-
-network.get_local_time() 
-
 display = matrixportal.graphics.display
 
+# --- Network setup ---
+network = matrixportal.network
+network.connect()
+network.get_local_time() 
+
+# --- MQTT Setup ---
 mqtt = MQTT.MQTT(
     broker=secrets.get("mqtt_broker"),
     username=secrets["aio_username"],
@@ -31,27 +31,46 @@ mqtt = MQTT.MQTT(
     port=1883,
 )
 
+MQTT.set_socket(socket, network._wifi.esp)
 
+MQTT_URL_SPOTIFY = "ahslaughter/feeds/matrix-display-feeds.spotify"
+MQTT_URL_COLOR = "ahslaughter/feeds/matrix-display-feeds.color"
+MQTT_URL_WHICH_DISPLAY = "ahslaughter/feeds/matrix-display-feeds.which-display"
+
+MQTT_TOPIC_COLOR = "color"
+MQTT_TOPIC_WHICH_DISPLAY = "which-display"
+MQTT_TOPIC_SPOTIFY = "spotify"
+
+## --- Display Options ---
 DISPLAY_CLOCK = 1
 DISPLAY_SPOTIFY = 2
 
-
-CURRENT_DISPLAY = DISPLAY_SPOTIFY## DISPLAY_CLOCK
+current_display = DISPLAY_SPOTIFY
 
 scroll_delay = 0.03
 
-RED_COLOR = 0xAA0000
-TURQUOISE_COLOR = 0x00FFAA
-PINK_COLOR = 0xFF0088
+NUM_COLORS = 5
+RED = 0xAA0000
+TURQUOISE = 0x00FFAA
+PINK = 0xFF0088
+YELLOW = 0xFFFF00
+ORANGE = 0xFF7722
 
-text_colors = [TURQUOISE_COLOR, PINK_COLOR, RED_COLOR]
+text_colors = [RED, ORANGE, YELLOW, TURQUOISE, PINK]
 current_text_color = 0
 
-MQTT.set_socket(socket, network._wifi.esp)
+## --- Fonts ---
+font = bitmap_font.load_font("/IBMPlexMono-Medium-24_jep.bdf")
+small_font = bitmap_font.load_font("/fonts/Arial-12.bdf")
+medium_font = bitmap_font.load_font("/fonts/Arial-14.bdf")
 
-
+## --- MQTT data and info ---
 last_data = {}
 
+
+
+
+## --- Clock data and info ---
 group = None# = displayio.Group()  # Create a Group
 bitmap = None # = displayio.Bitmap(64, 32, 2)  # Create a bitmap object,width, height, bit depth
 color = None #= displayio.Palette(4)  # Create a color palette
@@ -59,30 +78,28 @@ color = None #= displayio.Palette(4)  # Create a color palette
 # Create a TileGrid using the Bitmap and Palette
 tile_grid = None #= displayio.TileGrid(bitmap, pixel_shader=color)
 
-font = bitmap_font.load_font("/IBMPlexMono-Medium-24_jep.bdf")
 clock_label = Label(font)
 artist_label = None
 title_label = None
 
-small_font = bitmap_font.load_font("/fonts/Arial-12.bdf")
-medium_font = bitmap_font.load_font("/fonts/Arial-14.bdf")
-
 BLINK = True
+
+last_time_check = None
+
+TIME_STRING_FORMAT = "{hours}{colon}{minutes:02d}"
+current_time_string = None
 
 
 
 
 def set_display_clock(): 
-    # global matrixportal
+    print("setting up the clock display")
     global clock_label
     global group
     global bitmap
     global color
     global display
-    # matrixportal.add_text(text_color=0xFF8800,
-    #                       text_position=(30,5))
-    # now = time.localtime() 
-    # matrixportal.set_text(now[3], CLOCK_DISPLAY_TEXT_INDEX)
+    global current_display
 
     # --- Drawing setup ---
     group = displayio.Group()  # Create a Group
@@ -98,19 +115,18 @@ def set_display_clock():
     group.append(tile_grid)  # Add the TileGrid to the Group
     display.show(group)
 
-    clock_label = Label(font)
-    clock_label.text = "Yo!"
-    clock_label.x = 3
-    clock_label.y = 3   
+    clock_label = Label(font) 
 
     update_time()
     group.append(clock_label)
-    CURRENT_DISPLAY = DISPLAY_CLOCK
+    current_display = DISPLAY_CLOCK
+    print("curent display is hte clock")
 
 
 def set_display_spotify():
     global title_label
     global artist_label
+    global current_display
     group = displayio.Group()
     artist_label = Label(small_font)
     title_label = Label(medium_font)
@@ -134,19 +150,21 @@ def set_display_spotify():
     group.append(artist_label)
 
     display.show(group)
-    CURRENT_DISPLAY = DISPLAY_SPOTIFY
 
+    mqtt.subscribe(MQTT_URL_SPOTIFY)
+    mqtt.add_topic_callback(MQTT_TOPIC_SPOTIFY, spotify_update)
 
-    # matrixportal.add_text(text_wrap=10, 
-    #                 text_maxlen=25, 
-    #                 text_position=(2, 15),
-    #                 scrolling=False)
-    # matrixportal.set_text("waiting for update", 0)
+    current_display = DISPLAY_SPOTIFY
+
+def clear_display_spotify():
+    mqtt.unsubscribe(MQTT_URL_SPOTIFY)
+    mqtt.remove_topic_callback(MQTT_TOPIC_SPOTIFY)
 
 
 def spotify_update(message):
     global title_label
     global artist_label
+    print("got a spotify update!")
     index = message.find("|")
     if (index >= 0):
         title_text = message[0:index]
@@ -156,34 +174,44 @@ def spotify_update(message):
         title_label.color = text_colors[current_text_color]
 
 def scroll_spotify():
-    # Run a loop until the label is offscreen again and leave function
-    for _ in range(title_label.width):
-        # self._scrolling_group.x = self._scrolling_group.x - 1
-        title_label.x = title_label.x - 1
-        time.sleep(scroll_delay)
-    title_label.x = display.width
-    for _ in range(display.width):
-        title_label.x = title_label.x - 1
-        time.sleep(scroll_delay)
+    if len(last_data) == 0: 
+        artist_label.text = current_time_string
 
-    # Run a loop until the label is offscreen again and leave function
-    for _ in range(artist_label.width):
-        # self._scrolling_group.x = self._scrolling_group.x - 1
-        artist_label.x = artist_label.x - 1
-        time.sleep(scroll_delay)
-    artist_label.x = display.width
-    for _ in range(display.width):
-        artist_label.x = artist_label.x - 1
-        time.sleep(scroll_delay)
+    title_label.color = text_colors[current_text_color]
 
+    if title_label.width > display.width: 
+        # Run a loop until the label is offscreen again and leave function
+        for _ in range(title_label.width):
+            # self._scrolling_group.x = self._scrolling_group.x - 1
+            title_label.x = title_label.x - 1
+            time.sleep(scroll_delay)
+        title_label.x = display.width
+        for _ in range(display.width):
+            title_label.x = title_label.x - 1
+            time.sleep(scroll_delay)
 
+    if artist_label.width > display.width:
+        # Run a loop until the label is offscreen again and leave function
+        for _ in range(artist_label.width):
+            # self._scrolling_group.x = self._scrolling_group.x - 1
+            artist_label.x = artist_label.x - 1
+            time.sleep(scroll_delay)
+        artist_label.x = display.width
+        for _ in range(display.width):
+            artist_label.x = artist_label.x - 1
+            time.sleep(scroll_delay)
 
 def change_display(message):
+    if (message != "spotify"):
+        clear_display_spotify()
+
     if (message == "spotify"):
         set_display_spotify()
+        return
     if (message == "clock"):
         set_display_clock()
-    pass
+        return
+    print(message)
 
 def message_received(client, topic, message):
     print("Received {} for {}".format(message, topic))
@@ -198,28 +226,15 @@ def message_received(client, topic, message):
         matrixportal.scroll_text()
 
 
-localtime_refresh = None
-# weather_refresh = None
-
-
+### Checks the current time
+### Populates the global current_time_string with the current time. 
 def update_time(*, hours=None, minutes=None, show_colon=False):
-    global clock_label
-    global display
-    global text_colors
-    global current_text_color
+    global current_time_string
 
-    print("updating the time")
     now = time.localtime()  # Get the time values we need
-    # print(now)
-    # matrixportal.set_text('{0}:{1}'.format(now[3]%12, now[4]), 
-    #     CLOCK_DISPLAY_TEXT_INDEX)
 
     if hours is None:
         hours = now[3]
-    if hours >= 18 or hours < 6:  # evening hours to morning
-        clock_label.color = color[1]
-    else:
-        clock_label.color = color[3]  # daylight hours
     if hours > 12:  # Handle times later than 12:59
         hours -= 12
     elif not hours:  # Handle times between 0:00 and 0:59
@@ -233,28 +248,9 @@ def update_time(*, hours=None, minutes=None, show_colon=False):
     else:
         colon = ":"
 
-    clock_label.text = "{hours}{colon}{minutes:02d}".format(
+    current_time_string = TIME_STRING_FORMAT.format(
         hours=hours, minutes=minutes, colon=colon
     )
-
-    clock_label.color = text_colors[current_text_color]
-
-
-    bbx, bby, bbwidth, bbh = clock_label.bounding_box
-    # Center the label
-    clock_label.x = round(display.width / 2 - bbwidth / 2)
-    clock_label.y = display.height // 2
-
-    # print(clock_label.bounding_box)
-    # print(display.width)
-
-    # if DEBUG:
-    print("Label bounding box: {},{},{},{}".format(bbx, bby, bbwidth, bbh))
-    print("Label x: {} y: {}".format(clock_label.x, clock_label.y))
-    print("label: {}".format(clock_label.text))
-
-
-# def update_spotify():
 
 
 
@@ -268,40 +264,40 @@ def subscribe():
         mqtt.is_connected()
     except MQTT.MMQTTException:
         mqtt.connect()
+    
+    mqtt.subscribe(MQTT_URL_COLOR)
+    mqtt.subscribe(MQTT_URL_WHICH_DISPLAY)
     mqtt.on_message = message_received
+    mqtt.add_topic_callback(MQTT_TOPIC_COLOR, color_update)
+    mqtt.add_topic_callback(MQTT_TOPIC_WHICH_DISPLAY, change_display)
 
 def color_update(which):
     global current_text_color
-    print("Changing the color")
-    current_text_color = int(which)
-    # matrixportal.set_text_color(text_colors[int(which)], 0)
+    print("color_update")
+    new_color_index = int(which)
+    if new_color_index < NUM_COLORS:
+        current_text_color = new_color_index
 
-
-
-subscribe()
-mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.spotify") ##"ahslaughter/feeds/spotify")
-mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.color") ##"ahslaughter/feeds/spotify")
-mqtt.subscribe("ahslaughter/feeds/matrix-display-feeds.which-display")
-mqtt.on_message = message_received
-
-last_check = None
-localtime_refresh = None
 
 
 def update_clock():
-    global last_check
-    if last_check is None or time.monotonic() > last_check + 3600:
-        try:
-            update_time(
-                show_colon=True
-            )  # Make sure a colon is displayed while updating
-            network.get_local_time()  # Synchronize Board's clock to Internet
-            last_check = time.monotonic()
-        except RuntimeError as e:
-            print("Some error occured, retrying! -", e)
+    # global last_time_check
+    # if last_time_check is None or time.monotonic() > last_time_check + 3600:
+    #     try:
+    #         update_time(
+    #             show_colon=True
+    #         )  # Make sure a colon is displayed while updating
+    #         network.get_local_time()  # Synchronize Board's clock to Internet
+    #         last_time_check = time.monotonic()
+    clock_label.text = current_time_string
 
-    update_time()
-
+    clock_label.color = text_colors[current_text_color]
+    bbx, bby, bbwidth, bbh = clock_label.bounding_box
+    # Center the label
+    clock_label.x = round(display.width / 2 - bbwidth / 2)
+    clock_label.y = display.height // 2
+        # except RuntimeError as e:
+        #     print("Some error occured, retrying! -", e)
 
 
 def update_mqtt_messages(): 
@@ -312,20 +308,25 @@ def update_mqtt_messages():
         network.connect()
         mqtt.reconnect()
 
+subscribe()
 # set_display_clock()
 set_display_spotify()
 
 while True:
-    if (CURRENT_DISPLAY == DISPLAY_CLOCK):
+    # print(last_time_check)
+    # print(time.monotonic())
+    if last_time_check is None or time.monotonic() > last_time_check + 3600:
+        network.get_local_time()  # Synchronize Board's clock to Internet
+        last_time_check = time.monotonic()
+    update_time(show_colon=True)
+
+
+    if (current_display == DISPLAY_CLOCK):
         update_clock()
         
-    if (CURRENT_DISPLAY == DISPLAY_SPOTIFY):
+    if (current_display == DISPLAY_SPOTIFY):
         scroll_spotify()
 
     update_mqtt_messages()    
 
-    
-    # if (CURRENT_DISPLAY == DISPLAY_WEATHER):
-    #     update_weather()
-
-    time.sleep(3)
+    time.sleep(1)
