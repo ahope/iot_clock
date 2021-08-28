@@ -12,6 +12,9 @@ My goal with this project was to give me a field to explore and learn. I tried p
 
 - [x] Scroll the Spotify Display
 - [ ] Clean up the code
+    - [ ] Determine what HAS to be global vs what can be not global
+    - [ ] Look up the MQTT subscribe options (specify which function runs for on_message)
+    - [ ] Check if we **have** to call `loop()` or not.
 - [ ] Modify MQTT to keep a list of messages, showing one at a time. 
 - [ ] Add error checking for values from MQTT
 - [ ] Publish the Alexa skill for voice control
@@ -24,40 +27,61 @@ My goal with this project was to give me a field to explore and learn. I tried p
 
 ## Details
 
-```plantuml
-!define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v2.1.0
-skinparam defaultTextAlignment center
-!include ICONURL/common.puml
-!include ICONURL/font-awesome-5/gitlab.puml
-!include ICONURL/font-awesome-5/java.puml
-!include ICONURL/font-awesome-5/rocket.puml
-!include ICONURL/font-awesome/newspaper_o.puml
-FA_NEWSPAPER_O(news,good news!,node) #White {
-FA5_GITLAB(gitlab,GitLab.com,node) #White
-FA5_JAVA(java,PlantUML,node) #White
-FA5_ROCKET(rocket,Integrated,node) #White
-}
-gitlab ..> java
-java ..> rocket
-```
+Basic setup: 
 
-```mermaid
-graph TB
+* Initialize the display
+* Initialize the network 
+* Initialize the MQTT client
+* Initialize the colors and fonts
+* Set up the MQTT subscriptions for color and display changing
 
-  SubGraph1 --> SubGraph1Flow
-  subgraph "SubGraph 1 Flow"
-  SubGraph1Flow(SubNode 1)
-  SubGraph1Flow -- Choice1 --> DoChoice1
-  SubGraph1Flow -- Choice2 --> DoChoice2
-  end
+Enabling Clock Display: 
 
-  subgraph "Main Graph"
-  Node1[Node 1] --> Node2[Node 2]
-  Node2 --> SubGraph1[Jump to SubGraph1]
-  SubGraph1 --> FinalThing[Final Thing]
-end
-```
+`set_display_clock()`
 
+* Create a display Group
+* Show the Group
+* Create a label for the display
+* Get the time (via the network-- ensure the chip clock matches the correct time zone)
+* Figure out the correct placement based on size
+* Add the label to the Group
+* Remember that the clock is being displayed
+
+Enabling Spotify Display: 
+
+`set_display_spotify()`
+
+* Create a display Group
+* Create artist/title labels
+* Set the default text for the two labels
+* Set the correct placement for the labels
+* Show the display group
+* Remember that the spotify stuff is being displayed
+
+The run loop: 
+
+* If the clock is showing: 
+    - Check if the time has changed (next minute-- roughly check every minute)
+* If the spotify feed is showing: 
+    - Scroll the labels
+* Check for new MQTT messages
+    - Check that we're still connected
+    - Check if any messages have come in
+* Sleep for a few seconds and keep repeating
+
+When a message is received: 
+
+* If it's a color update: 
+    - Save the new current color. 
+    - Next time the clock or spotify display updates, it changes the labels to the new color. 
+* If it's a display update: 
+    - Call either `set_display_clock` or `set_display_spotify`
+* If it's a Spotify update: 
+    - Parse out the title and the artist
+    - Update the artist and title labels with the new info
+
+
+    
 ### First pass
 
 The clock was up and running fairly quickly. The hard part was figuring out how to connect to Spotify. After adding in some sample code to test the network connection and understand the request library, I realized that we can't do user authorization for Spotify because there is no UI/redirect URL. I *was* going consider utilizing MQTT as a second phase/upgrade, but I won't be able to get the access token via the ESP. 
