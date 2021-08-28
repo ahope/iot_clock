@@ -13,10 +13,15 @@ My goal with this project was to give me a field to explore and learn. I tried p
 - [x] Scroll the Spotify Display
 - [ ] Clean up the code
     - [ ] Determine what HAS to be global vs what can be not global
-    - [ ] Look up the MQTT subscribe options (specify which function runs for on_message)
-    - [ ] Check if we **have** to call `loop()` or not.
+    - [x] Look up the MQTT subscribe options (specify which function runs for on_message)
+        - [ ] Done, but gotta figure out how to make the topic callback work.  
+    - [x] Check if we **have** to call `loop()` or not. (We do.)
+    - [ ] Clock display: get the blink back
+        - [ ]  Have an adaptive sleep period for updates? 
 - [ ] Modify MQTT to keep a list of messages, showing one at a time. 
-- [ ] Add error checking for values from MQTT
+    - [ ]  Putting messages in a list; gotta utilize them. 
+- [x] Keep the time updated and stored globally
+- [x] Add error checking for values from MQTT
 - [ ] Publish the Alexa skill for voice control
     - [ ] Add capabilities to Alexa for: 
         - [ ]  Changing the display
@@ -35,9 +40,7 @@ My goal with this project was to give me a field to explore and learn. I tried p
 * Initialize the colors and fonts
 * Set up the MQTT subscriptions for color and display changing
 
-#### Enabling Clock Display: 
-
-`set_display_clock()`
+#### Enabling Clock Display: `set_display_clock()`
 
 * Create a display Group
 * Show the Group
@@ -47,9 +50,7 @@ My goal with this project was to give me a field to explore and learn. I tried p
 * Add the label to the Group
 * Remember that the clock is being displayed
 
-#### Enabling Spotify Display: 
-
-`set_display_spotify()`
+#### Enabling Spotify Display: `set_display_spotify()`
 
 * Create a display Group
 * Create artist/title labels
