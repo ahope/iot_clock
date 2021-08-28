@@ -27,7 +27,7 @@ My goal with this project was to give me a field to explore and learn. I tried p
 
 ## Details
 
-Basic setup: 
+#### Basic setup: 
 
 * Initialize the display
 * Initialize the network 
@@ -35,7 +35,7 @@ Basic setup:
 * Initialize the colors and fonts
 * Set up the MQTT subscriptions for color and display changing
 
-Enabling Clock Display: 
+#### Enabling Clock Display: 
 
 `set_display_clock()`
 
@@ -47,7 +47,7 @@ Enabling Clock Display:
 * Add the label to the Group
 * Remember that the clock is being displayed
 
-Enabling Spotify Display: 
+#### Enabling Spotify Display: 
 
 `set_display_spotify()`
 
@@ -58,7 +58,7 @@ Enabling Spotify Display:
 * Show the display group
 * Remember that the spotify stuff is being displayed
 
-The run loop: 
+#### The `run` loop: 
 
 * If the clock is showing: 
     - Check if the time has changed (next minute-- roughly check every minute)
@@ -69,7 +69,7 @@ The run loop:
     - Check if any messages have come in
 * Sleep for a few seconds and keep repeating
 
-When a message is received: 
+#### When a message is received: 
 
 * If it's a color update: 
     - Save the new current color. 
