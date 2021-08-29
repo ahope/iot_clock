@@ -12,14 +12,77 @@ My goal with this project was to give me a field to explore and learn. I tried p
 
 - [x] Scroll the Spotify Display
 - [ ] Clean up the code
-- [ ] Add error checking for values from MQTT
+    - [ ] Determine what HAS to be global vs what can be not global
+    - [x] Look up the MQTT subscribe options (specify which function runs for on_message)
+        - [ ] Done, but gotta figure out how to make the topic callback work.  
+    - [x] Check if we **have** to call `loop()` or not. (We do.)
+    - [ ] Clock display: get the blink back
+        - [ ]  Have an adaptive sleep period for updates? 
+- [ ] Modify MQTT to keep a list of messages, showing one at a time. 
+    - [ ]  Putting messages in a list; gotta utilize them. 
+- [x] Keep the time updated and stored globally
+- [x] Add error checking for values from MQTT
 - [ ] Publish the Alexa skill for voice control
     - [ ] Add capabilities to Alexa for: 
         - [ ]  Changing the display
-    - [ ] Make sure values match between Alexa and the display
+    - [ ] Make sure values match between Alexa and the 
+- [ ] The IFTTT applet for Spotify is polling, which means it updates ~once per hour. That's all well and fine, but it's not quite timely, and when it does update, it updates a bunch of songs all at once. Investigate other options. 
+    - [ ] Zapier
+    - [ ] Custom-built Spotify updater (Lambda?)
+
+## Details
+
+#### Basic setup: 
+
+* Initialize the display
+* Initialize the network 
+* Initialize the MQTT client
+* Initialize the colors and fonts
+* Set up the MQTT subscriptions for color and display changing
+
+#### Enabling Clock Display: `set_display_clock()`
+
+* Create a display Group
+* Show the Group
+* Create a label for the display
+* Get the time (via the network-- ensure the chip clock matches the correct time zone)
+* Figure out the correct placement based on size
+* Add the label to the Group
+* Remember that the clock is being displayed
+
+#### Enabling Spotify Display: `set_display_spotify()`
+
+* Create a display Group
+* Create artist/title labels
+* Set the default text for the two labels
+* Set the correct placement for the labels
+* Show the display group
+* Remember that the spotify stuff is being displayed
+
+#### The `run` loop: 
+
+* If the clock is showing: 
+    - Check if the time has changed (next minute-- roughly check every minute)
+* If the spotify feed is showing: 
+    - Scroll the labels
+* Check for new MQTT messages
+    - Check that we're still connected
+    - Check if any messages have come in
+* Sleep for a few seconds and keep repeating
+
+#### When a message is received: 
+
+* If it's a color update: 
+    - Save the new current color. 
+    - Next time the clock or spotify display updates, it changes the labels to the new color. 
+* If it's a display update: 
+    - Call either `set_display_clock` or `set_display_spotify`
+* If it's a Spotify update: 
+    - Parse out the title and the artist
+    - Update the artist and title labels with the new info
 
 
-
+    
 ### First pass
 
 The clock was up and running fairly quickly. The hard part was figuring out how to connect to Spotify. After adding in some sample code to test the network connection and understand the request library, I realized that we can't do user authorization for Spotify because there is no UI/redirect URL. I *was* going consider utilizing MQTT as a second phase/upgrade, but I won't be able to get the access token via the ESP. 
