@@ -16,7 +16,7 @@ the title and artist. At any point, I can swap between the clock display and the
 The swapping of display and color is done using an Alexa skill: 
 
 
-<img src="https://github.com/ahope/iot_clock/alexa.png" width="150">
+<img src="https://github.com/ahope/iot_clock/blob/master/alexa.png" width="150">
 
 ## Equipment
 
