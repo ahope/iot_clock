@@ -18,12 +18,23 @@ The swapping of display and color is done using an Alexa skill:
 
 <img src="https://github.com/ahope/iot_clock/blob/master/alexa.png" width="200">
 
-## Equipment
+# Requirements
+
+### Hardware
 
 * Adafruit RGB LED Matrix: https://www.adafruit.com/product/2278
 * Adafruit MatrixPortal board:  https://www.adafruit.com/product/4745
 
 This project was based on AdaBox 016-- a 64x32 RGB LED Matrix, with the MatrixPortal M4 board. The board is CircuitPython friendly, but can also be used with the Arduino IDE for lower-level programming. 
+
+### Software/Third Parties
+
+* adafruit.io (MQTT Broker)
+* IFTTT 
+* Alexa (Either a device, or the app)
+* Alexa Skill 
+* Spotify
+* Abode (not required-- I just added this for fun!)
 
 ## System Overview
 
