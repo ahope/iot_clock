@@ -15,7 +15,7 @@ the title and artist. At any point, I can swap between the clock display and the
 
 The swapping of display and color is done using an Alexa skill: 
 
-![image](alexa.png!width=150)
+![image](alexa.png | width=150)
 
 ## Equipment
 
