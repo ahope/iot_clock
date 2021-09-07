@@ -13,6 +13,10 @@ the title and artist. At any point, I can swap between the clock display and the
 
 ![image](https://media.giphy.com/media/h0UTMkgSwvAoSCCqaU/giphy.gif?cid=790b76111a91e0a7643c755ff39486fa9b73d34ee3ace350&rid=giphy.gif)
 
+The swapping of display and color is done using an Alexa skill: 
+
+![image](alexa.png)
+
 ## Equipment
 
 https://www.adafruit.com/product/5036
@@ -22,6 +26,10 @@ This project was based on AdaBox 016-- a 64x32 RGB LED Matrix, with the MatrixPo
 It's easy to get projects up and running with the code and instructions provided by Adafruit, but I'm more interested in learning how to push my understanding than just getting a project up and running. 
 
 My goal with this project was to give me a field to explore and learn. I tried pushing the project in a number of ways, just to see what could be done, what was easy, what was hard. 
+
+
+## System Overview
+
 
 
 ## Details
