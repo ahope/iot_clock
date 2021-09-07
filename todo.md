@@ -1,0 +1,21 @@
+## Things to do
+
+- [x] Scroll the Spotify Display
+- [ ] Clean up the code
+    - [ ] Determine what HAS to be global vs what can be not global
+    - [x] Look up the MQTT subscribe options (specify which function runs for on_message)
+        - [ ] Done, but gotta figure out how to make the topic callback work.  
+    - [x] Check if we **have** to call `loop()` or not. (We do.)
+    - [ ] Clock display: get the blink back
+        - [ ]  Have an adaptive sleep period for updates? 
+- [ ] Modify MQTT to keep a list of messages, showing one at a time. 
+    - [ ]  Putting messages in a list; gotta utilize them. 
+- [x] Keep the time updated and stored globally
+- [x] Add error checking for values from MQTT
+- [ ] Publish the Alexa skill for voice control
+    - [ ] Add capabilities to Alexa for: 
+        - [ ]  Changing the display
+    - [ ] Make sure values match between Alexa and the 
+- [ ] The IFTTT applet for Spotify is polling, which means it updates ~once per hour. That's all well and fine, but it's not quite timely, and when it does update, it updates a bunch of songs all at once. Investigate other options. 
+    - [ ] Zapier
+    - [ ] Custom-built Spotify updater (Lambda?)
