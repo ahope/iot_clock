@@ -16,7 +16,7 @@ the title and artist. At any point, I can swap between the clock display and the
 The swapping of display and color is done using an Alexa skill: 
 
 
-<img src="https://github.com/ahope/iot_clock/blob/master/alexa.png" width="150">
+<img src="https://github.com/ahope/iot_clock/blob/master/alexa.png" width="200">
 
 ## Equipment
 
@@ -105,4 +105,3 @@ To update the message/song on the display:
 * Matrix Portal Scoreboard project https://github.com/seantibor/matrix_portal_scoreboard
 * Adafruit Matrix Portal library overview and such https://learn.adafruit.com/adafruit-matrixportal-m4?view=all#circuitpython-ble
 * CircuitPython libraries for Matrix Portal M4 https://circuitpython.org/board/matrixportal_m4/
-* 
