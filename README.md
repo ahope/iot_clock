@@ -1,7 +1,7 @@
 
 # IoT Spotify Clock
 
-My goal with this project was to become better acquainted with an (RGB LED Matrix)[https://www.adafruit.com/product/5036] from AdaFruit. I wanted to be able to show two different things: 
+My goal with this project was to become better acquainted with an [RGB LED Matrix](https://www.adafruit.com/product/5036) from AdaFruit. I wanted to be able to show two different things: 
 
 * The time
 * What I'm currently listening to on Spotify
