@@ -95,6 +95,22 @@ To update the message/song on the display:
     - Parse out the title and the artist
     - Update the artist and title labels with the new info
 
+# The Future
+
+As I always say, I build to think. Playing around with technology helps me to think about the possibilities. Some ideas 
+that have come up: 
+
+* Well, of course, making the code nicer and designed to more easily add new displays. 
+* Add a "Timer" feature
+   *  In the short term, a clock count-down
+   *  In the longer term, an hour-glass timer.
+   *  In the LONG longer term, the clock vs hour-glass depends on the orientation of the display
+*  Add in different layouts for different screen orientations
+*  Create a fun "screen-saver" display that is really just playing with pixels.
+*  Probably a different project, but create a Euchre scorekeeper! 
+   *  I'm actually really excited about this one. Definitely want to incorporate this with Alexa for voice control. 
+   *  Keep track of current score, current trump, maybe even display card values for the current trump. 
+
 
     
 # Helpful Links: 
