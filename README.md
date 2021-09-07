@@ -20,17 +20,28 @@ The swapping of display and color is done using an Alexa skill:
 
 ## Equipment
 
-https://www.adafruit.com/product/5036
+* Adafruit RGB LED Matrix: https://www.adafruit.com/product/2278
+* Adafruit MatrixPortal board:  https://www.adafruit.com/product/4745
 
 This project was based on AdaBox 016-- a 64x32 RGB LED Matrix, with the MatrixPortal M4 board. The board is CircuitPython friendly, but can also be used with the Arduino IDE for lower-level programming. 
 
-It's easy to get projects up and running with the code and instructions provided by Adafruit, but I'm more interested in learning how to push my understanding than just getting a project up and running. 
-
-My goal with this project was to give me a field to explore and learn. I tried pushing the project in a number of ways, just to see what could be done, what was easy, what was hard. 
-
-
 ## System Overview
 
+Here's an overview of the entire system: 
+
+<img src="https://github.com/ahope/iot_clock/blob/master/iot_clock_diagram_1.png" width="250">
+
+To change the display via Alexa: 
+
+* Tell Alexa to either change the color or the display. 
+* The Alexa backend sends a message to the adafruit.io MQTT webhook. 
+* The display is subscribed to the MQTT broker, and when notified of an update, either changes the display or the color of the display. 
+
+To update the message/song on the display: 
+
+* There are 2 applets on IFTTT: 
+   * Spotify: Every hour, notify adafruit.io what songs have been played. 
+   * Abode: When the system status changes, notify adafruit.io of the update.
 
 
 ## Details
@@ -86,8 +97,6 @@ My goal with this project was to give me a field to explore and learn. I tried p
 
 
     
-
-
 # Helpful Links: 
 
 * Adafruit MatrixPortal Library https://circuitpython.readthedocs.io/projects/matrixportal/en/latest/api.html#adafruit-matrixportal-matrixportal
