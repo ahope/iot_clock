@@ -1,3 +1,4 @@
 name: Adrienne Slaughter, awesomesaucesness
 markdown: kramdown
 theme: jekyll-theme-minimal
+permalink: /iot_clock/:year/:month/:day/:title
