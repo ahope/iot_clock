@@ -1,3 +1,7 @@
+---
+layout: default
+title: Hank Quinlan, Horrible Cop
+---
 ## Posts
 
 <ul class="posts">
